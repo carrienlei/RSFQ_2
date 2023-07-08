@@ -1,85 +1,141 @@
-# Quine McCluskey Functions
-def mul(x,y): # Multiply 2 minterms
-    res = []
-    for i in x:
-        if i+"'" in y or (len(i)==2 and i[0] in y):
-            return []
-        else:
-            res.append(i)
-    for i in y:
-        if i not in res:
-            res.append(i)
-    return res
-
-def multiply(x,y): # Multiply 2 expressions
-    res = []
-    for i in x:
-        for j in y:
-            tmp = mul(i,j)
-            res.append(tmp) if len(tmp) != 0 else None
-    return res
-
-def refine(my_list,dc_list): # Removes don't care terms from a given list and returns refined list
-    res = []
-    for i in my_list:
-        if int(i) not in dc_list:
-            res.append(i)
-    return res
-
-def findEPI(x): # Function to find essential prime implicants from prime implicants chart
-    res = []
-    for i in x:
-        if len(x[i]) == 1:
-            res.append(x[i][0]) if x[i][0] not in res else None
-    return res
-
-def findVariables(x): # Function to find variables in a meanterm. For example, the minterm --01 has C' and D as variables
-    var_list = []
-    for i in range(len(x)):
-        if x[i] == '0':
-            var_list.append(chr(i+65)+"'")
-        elif x[i] == '1':
-            var_list.append(chr(i+65))
-    return var_list
-
-def flatten(x): # Flattens a list
-    flattened_items = []
-    for i in x:
-        flattened_items.extend(x[i])
-    return flattened_items
-
-def findminterms(a): #Function for finding out which minterms are merged. For example, 10-1 is obtained by merging 9(1001) and 11(1011)
-    gaps = a.count('-')
-    if gaps == 0:
-        return [str(int(a,2))]
-    x = [bin(i)[2:].zfill(gaps) for i in range(pow(2,gaps))]
+def compare_string(string1, string2):
+    """
+    >>> compare_string('0010','0110')
+    '0_10'
+ 
+    >>> compare_string('0110','1101')
+    -1
+    """
+    l1 = list(string1)
+    l2 = list(string2)
+    count = 0
+    for i in range(len(l1)):
+        if l1[i] != l2[i]:
+            count += 1
+            l1[i] = "_"
+    if count > 1:
+        return -1
+    else:
+        return "".join(l1)
+ 
+ 
+def check(binary):
+    """
+    >>> check(['0.00.01.5'])
+    ['0.00.01.5']
+    """
+    pi = []
+    while 1:
+        check1 = ["$"] * len(binary)
+        temp = []
+        for i in range(len(binary)):
+            for j in range(i + 1, len(binary)):
+                k = compare_string(binary[i], binary[j])
+                if k != -1:
+                    check1[i] = "*"
+                    check1[j] = "*"
+                    temp.append(k)
+        for i in range(len(binary)):
+            if check1[i] == "$":
+                pi.append(binary[i])
+        if len(temp) == 0:
+            return pi
+        binary = list(set(temp))
+ 
+ 
+def decimal_to_binary(no_of_variable, minterms):
+    """
+    >>> decimal_to_binary(3,[1.5])
+    ['0.00.01.5']
+    """
     temp = []
-    for i in range(pow(2,gaps)):
-        temp2,ind = a[:],-1
-        for j in x[0]:
-            if ind != -1:
-                ind = ind+temp2[ind+1:].find('-')+1
-            else:
-                ind = temp2[ind+1:].find('-')
-            temp2 = temp2[:ind]+j+temp2[ind+1:]
-        temp.append(str(int(temp2,2)))
-        x.pop(0)
+    s = ""
+    for m in minterms:
+        for i in range(no_of_variable):
+            s = str(m % 2) + s
+            m //= 2
+        temp.append(s)
+        s = ""
     return temp
-
-def compare(a,b): # Function for checking if 2 minterms differ by 1 bit only
-    c = 0
-    for i in range(len(a)):
-        if a[i] != b[i]:
-            mismatch_index = i
-            c += 1
-            if c>1:
-                return (False,None)
-    return (True,mismatch_index)
-
-def removeTerms(_chart,terms): # Removes minterms which are already covered from chart
-    for i in terms:
-        for j in findminterms(i):
-            try:
-                del _chart[j]
-            except KeyError:
-                pass
+ 
+ 
+def is_for_table(string1, string2, count):
+    """
+    >>> is_for_table('__1','011',2)
+    True
+ 
+    >>> is_for_table('01_','001',1)
+    False
+    """
+    l1 = list(string1)
+    l2 = list(string2)
+    count_n = 0
+    for i in range(len(l1)):
+        if l1[i] != l2[i]:
+            count_n += 1
+    if count_n == count:
+        return True
+    else:
+        return False
+ 
+ 
+def selection(chart, prime_implicants):
+    """
+    >>> selection([[1]],['0.00.01.5'])
+    ['0.00.01.5']
+ 
+    >>> selection([[1]],['0.00.01.5'])
+    ['0.00.01.5']
+    """
+    temp = []
+    select = [0] * len(chart)
+    for i in range(len(chart[0])):
+        count = 0
+        rem = -1
+        for j in range(len(chart)):
+            if chart[j][i] == 1:
+                count += 1
+                rem = j
+        if count == 1:
+            select[rem] = 1
+    for i in range(len(select)):
+        if select[i] == 1:
+            for j in range(len(chart[0])):
+                if chart[i][j] == 1:
+                    for k in range(len(chart)):
+                        chart[k][j] = 0
+            temp.append(prime_implicants[i])
+    while 1:
+        max_n = 0
+        rem = -1
+        count_n = 0
+        for i in range(len(chart)):
+            count_n = chart[i].count(1)
+            if count_n > max_n:
+                max_n = count_n
+                rem = i
+ 
+        if max_n == 0:
+            return temp
+ 
+        temp.append(prime_implicants[rem])
+ 
+        for i in range(len(chart[0])):
+            if chart[rem][i] == 1:
+                for j in range(len(chart)):
+                    chart[j][i] = 0
+ 
+ 
+def prime_implicant_chart(prime_implicants, binary):
+    """
+    >>> prime_implicant_chart(['0.00.01.5'],['0.00.01.5'])
+    [[1]]
+    """
+    chart = [[0 for x in range(len(binary))] for x in range(len(prime_implicants))]
+    for i in range(len(prime_implicants)):
+        count = prime_implicants[i].count("_")
+        for j in range(len(binary)):
+            if is_for_table(prime_implicants[i], binary[j], count):
+                chart[i][j] = 1
+ 
+    return chart
