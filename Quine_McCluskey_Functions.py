@@ -139,3 +139,12 @@ def prime_implicant_chart(prime_implicants, binary):
                 chart[i][j] = 1
  
     return chart
+
+def getIndices(implicant):
+    indices = []
+
+    for index, char in enumerate(implicant):
+        if char == '1':
+            indices.append(index)
+    
+    return indices
