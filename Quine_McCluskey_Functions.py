@@ -21,8 +21,8 @@ def compare_string(string1, string2):
  
 def check(binary):
     """
-    >>> check(['0.00.01.5'])
-    ['0.00.01.5']
+    >>> check(['0.00.01.4'])
+    ['0.00.01.4']
     """
     pi = []
     while 1:
@@ -45,8 +45,8 @@ def check(binary):
  
 def decimal_to_binary(no_of_variable, minterms):
     """
-    >>> decimal_to_binary(3,[1.5])
-    ['0.00.01.5']
+    >>> decimal_to_binary(3,[1.4])
+    ['0.00.01.4']
     """
     temp = []
     s = ""
@@ -81,11 +81,11 @@ def is_for_table(string1, string2, count):
  
 def selection(chart, prime_implicants):
     """
-    >>> selection([[1]],['0.00.01.5'])
-    ['0.00.01.5']
+    >>> selection([[1]],['0.00.01.4'])
+    ['0.00.01.4']
  
-    >>> selection([[1]],['0.00.01.5'])
-    ['0.00.01.5']
+    >>> selection([[1]],['0.00.01.4'])
+    ['0.00.01.4']
     """
     temp = []
     select = [0] * len(chart)
@@ -128,7 +128,7 @@ def selection(chart, prime_implicants):
  
 def prime_implicant_chart(prime_implicants, binary):
     """
-    >>> prime_implicant_chart(['0.00.01.5'],['0.00.01.5'])
+    >>> prime_implicant_chart(['0.00.01.4'],['0.00.01.4'])
     [[1]]
     """
     chart = [[0 for x in range(len(binary))] for x in range(len(prime_implicants))]
@@ -140,11 +140,40 @@ def prime_implicant_chart(prime_implicants, binary):
  
     return chart
 
-def getIndices(implicant):
-    indices = []
 
-    for index, char in enumerate(implicant):
-        if char == '1':
-            indices.append(index)
-    
-    return indices
+def convertBack(implicants):
+    final_decoded_answer=[]
+    for x in implicants:
+        decoded = ''
+        if (x[0:4] == ['10000']):
+            decoded += 'D_And&'
+        elif (x[0:4] == ['01000']):
+            decoded += 'D_Dff&'
+        elif (x[0:4] == ['00100']):
+            decoded += 'D_Inv&'
+        elif (x[0:4] == ['00010']):
+            decoded += 'D_Or&'
+        elif (x[0:4] == ['00001']):
+            decoded += 'D_Xor&'
+        
+        if (x[5:9] == ['10000']):
+            decoded += 'L_And '
+        elif (x[5:9] == ['01000']):
+            decoded += 'L_Dff '
+        elif (x[5:9] == ['00100']):
+            decoded += 'L_Inv '
+        elif (x[5:9] == ['00010']):
+            decoded += 'L_Or '
+        elif (x[5:9] == ['00001']):
+            decoded += 'L_Xor '
+        
+        if (x[10:12] == ['100']):
+            decoded += '0_spl '
+        elif (x[10:12] == ['010']):
+            decoded += '1_spl '
+        elif (x[10:12] == ['001']):
+            decoded += '2_spl'
+        
+        final_decoded_answer.append(decoded)
+    output = ' + '.join(final_decoded_answer)
+    return output
